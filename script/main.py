@@ -9,15 +9,15 @@ import dynamic_window_approach as dwa
 
 class Config:
   def __init__(self):
-    self.max_speed = 1.5  # [m/s]
+    self.max_speed = 3.0  # [m/s]
     self.min_speed = -0.5  # [m/s]
-    self.max_yaw_rate = 40.0 * math.pi / 180.0  # [rad/s]
+    self.max_yaw_rate = 90.0 * math.pi / 180.0  # [rad/s]
     self.max_accel = 5.0  # [m/ss]
-    self.max_delta_yaw_rate = 40.0 * math.pi / 180.0  # [rad/ss]
+    self.max_delta_yaw_rate = 50.0 * math.pi / 180.0  # [rad/ss]
     self.v_resolution = 0.2  # [m/s]
     self.yaw_rate_resolution = 0.5 * math.pi / 180.0  # [rad/s]
     self.dt = 0.1  # [s] Time tick for motion prediction
-    self.predict_time = 1.0  # [s]
+    self.predict_time = 1.5  # [s]
     self.to_goal_cost_gain = 0.15
     self.speed_cost_gain = 1.0
     self.obstacle_cost_gain = 1.0
@@ -35,7 +35,8 @@ class Config:
 class Turtle:
   def __init__(self):
     rospy.init_node('main', anonymous=True)
-    self.ob_sub = rospy.Subscriber("turtle1/Pose", Pose, self.ob_callback)
+    self.ob_sub = rospy.Subscriber("turtle1/pose", Pose, self.ob_callback)
+    self.ob_pub = rospy.Publisher("turtle1/cmd_vel", Twist, queue_size=10)
     self.pose_sub = rospy.Subscriber("turtle2/pose", Pose, self.pose_callback)
     self.vel_pub = rospy.Publisher("turtle2/cmd_vel", Twist, queue_size=10)
     self.rate = rospy.Rate(10)
@@ -49,7 +50,7 @@ class Turtle:
   
     
   def ob_callback(self, msg):
-    self.config.ob = np.array([msg.x, msg.y])
+    self.config.ob = np.array([[msg.x, msg.y]])
     
   def pose_callback(self, msg):
     self.turtle2_pose = msg
@@ -62,11 +63,14 @@ class Turtle:
     self.main()
   
   def main(self):
+    ob_vel = Twist()
+    ob_vel.linear.x = 0.5
+    ob_vel.angular.z = 0.5
+    self.ob_pub.publish(ob_vel)
+    
     if self.i == len(self.config.waypoints):
       self.isDone = True
-    if self.isDone is True:
-      rospy.signal_shutdown("done")
-      return
+      self.i = 0
       
     # initial state [x(m), y(m), yaw(rad), v(m/s), omega(rad/s)]
     self.x = np.array([self.init_x, self.init_y, self.init_theta, self.init_v, self.init_omega])
