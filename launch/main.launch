@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+	<!-- Launch Turtlesim Simulation -->
+	<node pkg="turtlesim" name="turtlesim" type="turtlesim_node" />
+	<!-- Custom nodes -->
+	<node pkg="turtlesim_dwa_planner" name="main" type="main.py" output="screen"/>
+	<node pkg="rosservice" type="rosservice" name="rosservice" args="call /spawn 2.5 2.5 0 turtle2" />
+</launch>
